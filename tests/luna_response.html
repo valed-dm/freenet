@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<head>
+    <title>freenet Mail Power Login</title>
+    <link rel="shortcut icon" type="image/x-icon" href="/img/freenet_32x32.ico"/>
+    <meta name="robots" content="index, follow, noodp, noydir"/>
+    <meta name="language" content="de"/>
+    <meta name="copyright" content="freenet.de GmbH"/>
+    <meta name="organization" content="freenet.de GmbH"/>
+    <meta name="author" content="freenet.de - freenet"/>
+    <meta name="publisher" content="freenet.de - freenet"/>
+    <meta name="description"
+          content="Der freenet Mail Power Login für unsere mailpower Kunden ist garantiert werbefrei und bietet Ihnen jeden Tag ein anderes Bild beim Einloggen in Ihr freenet Mail E-Mail Postfach."/>
+    <meta property="og:type" content="website"/>
+    <meta property="og:description"
+          content="Der freenet Mail Power Login für unsere mailpower Kunden ist garantiert werbefrei und bietet Ihnen jeden Tag ein anderes Bild beim Einloggen in Ihr freenet Mail E-Mail Postfach."/>
+    <meta property="og:title" content="freenet Mail Power Login"/>
+    <meta property="og:site_name" content="freenet.de E-Mail Login"/>
+    <meta name="viewport" content="initial-scale=1"/>
+
+    <link rel="stylesheet" type="text/css" href="css/global.css"/>
+    <!--[if lte IE 8]>
+    <link rel="stylesheet" type="text/css" href="/css/ie8css.css"/>
+    <style type="text/css">
+        #ieBackground {
+            filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src='img/bgBild214.jpg', sizingMethod='scale');
+            -ms-filter: "progid:DXImageTransform.Microsoft.AlphaImageLoader(src='img/bgBild214.jpg', sizingMethod='scale')";
+            width: 100%;
+            height: 100%;
+            position: absolute;
+        }
+    </style>
+    <![endif]-->
+
+    <script type="text/javascript" src="js/jquery.min.js"></script>
+    <script type="text/javascript" src="js/EMO_Text.js"></script>
+    <script type="text/javascript" src="js/EMO_Login.js"></script>
+    <script type="text/javascript" src="https://script.ioam.de/iam.js"></script>
+
+    <script src="https://components.freenet.de/js/vue.min.js"></script>
+    <script src="https://components.freenet.de/js/object-assign-auto.min.js"></script>
+    <link rel="stylesheet" href="https://components.freenet.de/login/frnLogin.css">
+
+</head>
+<body style="margin:0px; background: url(img/bgBild214.jpg) no-repeat center center fixed;">
+
+<!--[if lte IE 8]>
+<div id="ieBackground"></div>
+<![endif]-->
+<div id="upsellingBg" style="display: none;"></div>
+<div id="powerLoginBg">
+    <div id="mailPowerHeader">
+        <div id="innerHeader">
+            <div id="mailPowerLogo" onclick="window.open('https://email.freenet.de/classic');">
+                <span class="frn icon-freenet-Logo-Q42021-transparent-RGB"><span class="path1"></span><span class="path2"></span><span
+                        class="path3"></span><span class="path4"></span></span>
+            </div>
+            <div id="mailPowerSiegel">
+                <img src="/img/grafik-ssl.png" alt="cloud services"/><img src="/img/grafik-emig.png" alt="cloud services" /><img src="/img/grafik-cloud.png" alt="cloud services"/>
+            </div>
+        </div>
+    </div>
+    <div id="mailPowerLoginBody">
+        <div id="UpsellingBox" style="display:none; z-index: 1001; top: 0; left: 0; position:absolute;">
+            <div id="upsellingAussen">
+	<iframe id="upsellingFrame" marginheight="10" marginwidth="0" frameborder="0" src="https://www.freenet.de/snippet/upselling/upsellingpowerlogin"></iframe>
+</div>
+
+        </div>
+
+        <div id="mailPowerTitle">
+            Keine Werbung. Kein Spam.<br>
+            Nur E-Mail.
+        </div>
+
+        <div id="mailPowerLoginBox" class="mailPowerRightBox">
+            <div class="inner">
+                <div id="mailPowerLoginBoxContent">
+
+                    <div id="login">
+                        <login world="2" callbackurl="/Email/Login/Check" ignorelogoutforget="true"></login>
+                    </div>
+                    <script src="https://components.freenet.de/login/frnLogin.umd.min.js"></script>
+                    <script>
+                        new Vue({
+                            components: {
+                                login: frnLogin
+                            }
+                        }).$mount('#login');
+
+                    </script>
+                </div>
+            </div>
+        </div>
+
+        <div id="mailPowerErrorBox" class="mailPowerRightBox">
+            <div class="inner">
+                <div id="loginHead">
+                    <h1 id="errorTextHead">Fehler!</h1>
+                </div>
+
+                <p style="color:#333;" id="errorTextMessage">
+                    Fehlermeldung
+                </p>
+                <div id="passwordForgot" style="margin-bottom: 40px;">
+                    <a href="https://email.freenet.de/service/frn/PasswortVergessen">Passwort vergessen?</a><br>
+                </div>
+                <div id="errorButton" onclick="EMO_Login.hideErrorBox();">Erneut anmelden</div>
+            </div>
+        </div>
+    </div>
+    <div id="mailPowerLoginFooter">
+        <div id="innerFooter">
+            <div id="footerLinks">
+                <a href="https://www.freenet.de/impressum/index.html" target="_blank">Impressum</a>
+                <a href="https://www.freenet.de/agb/index.html" target="_blank">AGB</a>
+                <a href="https://www.freenet.de/datenschutz/index.html" target="_blank">Datenschutz</a>
+                <a href="https://www.freenet-group.de/index.html" target="_blank">freenet Group</a>
+                <a href="https://kundenservice.freenet.de/" target="_blank">Kundenservice</a>
+                <a href="https://www.facebook.com/freenet/" target="_blank">Facebook</a>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    searchForMobile = function(ua) {
+        let cTo = /android.*mobile|avantgo|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|symbian|treo|up\. (browser|link)|vodafone|wap|windows (ce|phone)|xda|xiino/i;
+        return ua.match(cTo) != null;
+    }
+
+    let szmMobile = searchForMobile(navigator.userAgent || navigator.vendor || window.opera);
+    let Frn = {};
+
+    Frn.fireEvent = function(event){
+        var myFunction = 'fnEvt',
+            _window = window,
+            _document = document;
+
+        _window[myFunction] = _window[myFunction] || [];
+        if(typeof(CustomEvent) === 'function') {
+            var c = new CustomEvent(event);
+        } else {
+            var c = _document.createEvent('CustomEvent');
+            c.initEvent(event, true, true);
+        }
+        _document.dispatchEvent(c);
+        _window[myFunction][event] = true;
+    }
+
+    Frn.on = function (event, callback) {
+        let myFunction = 'fnEvt',
+            _window = window,
+            _document = document;
+
+        _window[myFunction] = _window[myFunction] || [];
+        if (typeof _window[myFunction][event] === 'undefined') {
+            _document.addEventListener(event, function(){
+                callback();
+            });
+        } else {
+            callback();
+        }
+    }
+
+    iomDomainServiceName = 'data-fe87994a5d.freenet.de';
+    iomQdsType = 'in';
+    iomSt = 'freenet';
+    if (typeof szmMobile !== "undefined" && szmMobile === true) {
+        iomDomainServiceName = 'data-24d3602ae0.freenet.de';
+        iomQdsType = 'mo';
+        iomSt = 'mobfreen';
+    }
+
+    (function (document, script, url, callback) {
+        let me = document.getElementsByTagName(script)[0], stub = document.createElement(script);
+        stub.async = true;
+        stub.onload = callback;
+        stub.src = url;
+        me.parentNode.insertBefore(stub, me);
+    })
+    (document, 'script', '//' + iomDomainServiceName + '/iomm/latest/bootstrap/stub.js', function () {
+        IOMm('configure', {st: iomSt, dn: iomDomainServiceName, mh: 5});
+        IOMm('pageview', {cp: 'stat/freenet/mail/powerlogin'});
+        IOMm('3p', 'qds', iomQdsType);
+        Frn.fireEvent('loadIomManager');
+    });
+
+    Frn.on('loadIomManager', function() {
+        (function (document, script, url, callback) {
+            var stub = document.getElementsByTagName(script)[0], bundle = document.createElement(script);
+            bundle.async = true;
+            bundle.onload = callback;
+            bundle.src = url;
+            stub.parentNode.insertBefore(bundle, stub);
+        })
+        (document, 'script', '//' + iomDomainServiceName + '/iomm/latest/manager/base/es5/bundle.js', function () {});
+    });
+
+</script>
+</body>
+</html>
