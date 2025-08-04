@@ -1,0 +1,952 @@
+<h1 class="headline1">
+ Willkommen bei freenet
+ <br/>
+ <span class="headline2-light -light">
+  Fragen zur Datenvervollständigung? 040/55 55 41 000
+ </span>
+ <span class="headline3-light -light is-block">
+  Mo-So 8-20 Uhr
+ </span>
+</h1>
+<div class="spinner" ng-show="isLoading">
+ <div class="bounce1">
+ </div>
+ <div class="bounce2">
+ </div>
+ <div class="bounce3">
+ </div>
+</div>
+<wizard ng-cloak="" ng-hide="isLoading">
+ <wz-step id="processStep-step1" name="Meine Daten vervollständigen" track-param="step1">
+  <form id="" name="contractForm" novalidate="">
+   <fieldset class="grid-col grid-xl-12 no-padding">
+    <div class="grid-col grid-xl-4 grid-m-12 grid-s-8 grid-s-clear">
+     <div class="data-container">
+      <h3 ng-show="roleOptions || requiredData">
+       Ihre Benutzerdaten
+      </h3>
+      <h3 ng-show="(!roleOptions &amp;&amp; !requiredData) || (roleOptions &amp;&amp; requiredData &amp;&amp; !roleChoise &amp;&amp; !contractNumber)">
+       Vervollständigen Sie Ihre Benutzerdaten
+      </h3>
+      <p ng-if="(!sendEmail &amp;&amp; smsConfirm || hasIdentificationCode || (letterConfirm &amp;&amp; hasIdentificationCode)) &amp;&amp; !emailConfirm">
+       Aus Datenschutzgründen wird die Zuordnung von Verträgen und Rufnummern erst nach der Bestätigung mittels Aktivierungscode durchgeführt.
+      </p>
+      <p ng-show="roleOptions || requiredData || msisdnSelect || hasIdentificationCode">
+       <strong ng-if="customerId || (businessUser &amp;&amp; contractdata.identifier)">
+        Kundennummer:
+        <span ng-if="customerId">
+         {{customerId}}
+        </span>
+        <span ng-if="contractdata.identifier  &amp;&amp; !customerId">
+         {{contractdata.identifier}}
+        </span>
+        <br/>
+       </strong>
+       <strong ng-if="msisdn ||  (businessUser &amp;&amp; contractdata.invoiceMsisdn)">
+        Rufnummer:
+        <span ng-if="msisdn">
+         {{msisdn}}
+        </span>
+        <span ng-if="contractdata.invoiceMsisdn &amp;&amp; !msisdn">
+         {{contractdata.invoiceMsisdn}}
+        </span>
+        <br/>
+       </strong>
+       <strong ng-if="contractId">
+        Vertragsnummer: {{contractId}}
+        <br/>
+       </strong>
+       <strong ng-if="contractdata.userRole || userRole">
+        Kundenstatus: {{((contractdata.userRole || userRole) === 'CustomerAccountAdmin') ? 'Administrator' : 'Nutzer'}}
+        <br/>
+       </strong>
+      </p>
+      <div ng-show="!roleOptions &amp;&amp; !requiredData">
+       <p>
+        Schön, dass Sie sich bei uns angemeldet haben. Um die Services von "Mein Konto" vollumfänglich zu nutzen, verknüpfen Sie bitte als freenet Kunde Ihre Daten mit Ihrem Benutzerkonto.
+       </p>
+      </div>
+      <p ng-show="(smsConfirm || hasIdentificationCode) &amp;&amp; requiresPerson &amp;&amp; !requiredData">
+       Bitte geben Sie hier Ihre persönlichen Daten ein.
+      </p>
+      <p ng-show="(((checkIban || !checkIban) &amp;&amp; requiresZipCode &amp;&amp; requiresIban &amp;&amp; newAccount &amp;&amp; !doMigrateSignin &amp;&amp; !hasIdentificationCode &amp;&amp; !smsConfirm) || (requiresZipCode &amp;&amp; requiresIban &amp;&amp; sendLetter)
+          || (!checkIban &amp;&amp; requiresZipCode &amp;&amp; smsConfirm) || (!checkIban &amp;&amp; requiresZipCode &amp;&amp; requiresIban &amp;&amp; (sendSMS || sendEmail) &amp;&amp; hasIdentificationCode) || (checkIban &amp;&amp; requiresZipCode &amp;&amp; !sendLetter)) &amp;&amp; !doMigrateSignin">
+       Verwenden Sie hier bitte die PLZ Ihrer Kundenadresse, sowie die aktuell bei uns für Abbuchungen hinterlegte IBAN. Diese Daten werden ausschließlich zur Authentifizierung verwendet und nicht gespeichert.
+      </p>
+      <p ng-show="(requiresIbanOrZipCode &amp;&amp; requiresZipCode)">
+       Verwenden Sie hier bitte die PLZ Ihrer Kundenadresse.
+      </p>
+      <p ng-show="(requiresIbanOrZipCode &amp;&amp; requiresIban)">
+       Verwenden Sie hier die aktuell bei uns für Abbuchungen hinterlegte IBAN.
+      </p>
+      <p ng-show="businessUser &amp;&amp; !sendLetter">
+       Verwenden Sie hier einfach die dazugehörige {{neededData}}. Alle Rufnummern der gleichen Sammelrechnung werden Ihrem Benutzerkonto automatisch hinzugefügt. Weitere Rechnungen/Kundennummern können Sie im Bereich „Meine Verträge“ im Nachgang ganz einfach hinzufügen. Nach erfolgter Zuordnung deaktivieren wir Ihre bisherigen Zugänge für Sie.
+      </p>
+     </div>
+    </div>
+    <div class="grid-col grid-xl-8 grid-m-12 grid-s-8 grid-s-clear">
+     <style>
+      .tabs.tabs-big li {
+    padding: 20px 20px 20px;
+    width: 49%;
+    background-color: #21314d;
+    color: white;
+  }
+  .tabs ul li.is-active,
+  .tabs ul.dropdown:hover li:hover.is-active:hover, .tabs ul.dropdown:hover li:hover.is-active:active, .tabs ul.dropdown:hover li:active.is-active:hover, .tabs ul.dropdown:hover li:active.is-active:active {
+    background-color: #84bc34;
+    color: #21314d;
+  }
+  .tabs ul li.is-active:before {
+    border-color: #84bc34 transparent transparent;
+  }
+  .steps-indicator .linklist li a {
+    color: #84bc34;
+  }
+     </style>
+     <div class="data-changed-container" ng-cloak="">
+      <p ng-if="personalContact === true">
+       {{personalContactMessage}}
+      </p>
+      <!--div ng-show="!roleOptions && !requiredData">
+    <div app-md-tabs="app-md-tabs" class="tabs tabs-big">
+      <ul class="dropdown">
+        <li class="is-active">
+          <div class="content"><a href="@{route_datenvervollstaendigung}"></a>
+            <h2>Bereits Kunde</h2>
+            <span class="text">Verknüpfe Deine Daten<br>mit Deinem Benutzerkonto</span>
+          </div>
+          <span class="arrow"></span>
+        </li>
+        <li>
+          <div class="content"><a href="@{route_datenvervollstaendigung_interessent}"></a>
+            <h2>Interessent</h2>
+            <span class="text">Vervollständige<br>Deine Benutzerdaten</span>
+          </div>
+          <span class="arrow"></span>
+        </li>
+      </ul>
+    </div>
+  </div-->
+      <div ng-if="!roleOptions &amp;&amp; !requiredData">
+       <h3 class="headline3 -no-gap" ng-show="!isLoading &amp;&amp; !customerId">
+        Geben Sie bitte Ihre Kunden- oder Rufnummer ein.
+       </h3>
+       <div class="is-invalid" ng-show="errorMessage &amp;&amp; !isLoading">
+        <div class="error tooltip">
+         <div class="message">
+          {{errorMessage}}
+         </div>
+        </div>
+       </div>
+       <div class="inner-wrapper">
+        <hr/>
+       </div>
+       <div class="form-item">
+        <label for="firstIdentifier">
+         Kundennummer / Rufnummer *
+        </label>
+        <div class="field-item">
+         <div class="grid-form">
+          <input app-focus="" app-md-validate="number" id="firstIdentifier" name="identifier" ng-focus="showHint=true" ng-model="contractdata.firstIdentifier" placeholder="Kundennummer oder Rufnummer" required="" type="text"/>
+          <ul class="linklist list">
+           <li>
+            <a app-md-fancybox="" class="fancybox" data-fancybox-type="image" href="../img/datenvervollstaendigung/Muster_Anschreiben1.jpg" rel="Kundennummer" title="Wo finde ich meine Kundennummer?">
+             Wo finde ich meine Kundennummer?
+            </a>
+            <a class="fancybox" href="../img/datenvervollstaendigung/Muster_Rechnung.jpg" rel="Kundennummer" title="Wo finde ich meine Kundennummer?">
+            </a>
+           </li>
+           <li>
+            <a class="fancybox" href="../img/datenvervollstaendigung/Muster_Rechnung.jpg" rel="Kundennummer" title="Wo finde ich meine Kundennummer?">
+            </a>
+           </li>
+           <li>
+            <a ng-href="/lp/help-to-register/PK-Mobilfunkvertrag-falsche-E-Mail-Adresse/" target="_blank">
+             Was mache ich, wenn mir eine Fehlermeldung angezeigt wird?
+            </a>
+           </li>
+          </ul>
+         </div>
+         <div class="grid-form">
+          <div class="is-successful" ng-show="showHint">
+           <div class="info tooltip">
+            <div class="message">
+             Die Kundennummer ist immer ohne vorangestellte Buchstabenkombination „MC", "SP“ oder "CW" einzugeben.
+             <br/>
+             Eine Rufnummer beginnt immer mit einer "0". Der Beginn mit "49", "+49" oder "17..." ist nicht gestattet.
+            </div>
+           </div>
+          </div>
+          <div class="error tooltip">
+           <div class="message">
+            Bitte geben Sie Ihre Kundennummer oder Ihre Rufnummer ein.
+           </div>
+          </div>
+         </div>
+        </div>
+       </div>
+       <div class="inner-wrapper">
+        <hr/>
+       </div>
+      </div>
+      <div ng-if="requiredData &amp;&amp; !contractId">
+       <h3 class="headline3 -no-gap" ng-show="!isLoading">
+        Geben Sie bitte Ihre Vertragsnummer ein.
+       </h3>
+       <div class="is-invalid" ng-show="errorMessage &amp;&amp; !isLoading">
+        <div class="error tooltip">
+         <div class="message">
+          {{errorMessage}}
+         </div>
+        </div>
+       </div>
+       <div class="inner-wrapper">
+        <hr/>
+       </div>
+       <div class="form-item">
+        <label for="contractId">
+         Vertragsnummer *
+        </label>
+        <div class="field-item">
+         <div class="grid-form">
+          <input app-focus="" app-md-validate="number" id="contractId" name="secondIdentifier" ng-model="contractdata.contractId" placeholder="Vertragsnummer" required="" type="text"/>
+          <ul class="linklist list">
+           <li>
+            <a app-md-fancybox="" class="fancybox" data-fancybox-type="image" href="../img/datenvervollstaendigung/Muster_Anschreiben1.jpg" rel="Vertragsnummer" title="Wo finde ich meine Vertragsnummer?">
+             Wo finde ich meine Vertragsnummer?
+            </a>
+            <a class="fancybox" href="../img/datenvervollstaendigung/Muster_Rechnung.jpg" rel="Vertragsnummer" title="Wo finde ich meine Vertragsnummer?">
+            </a>
+           </li>
+          </ul>
+         </div>
+         <div class="grid-form">
+          <div class="error tooltip">
+           <div class="message">
+            Bitte geben Sie Ihre Vertragsnummer ein.
+           </div>
+          </div>
+         </div>
+        </div>
+       </div>
+       <div class="inner-wrapper">
+        <hr/>
+       </div>
+      </div>
+      <div ng-if="roleChoise &amp;&amp; !firstResponse &amp;&amp; !privateUser &amp;&amp; !businessUser">
+       <h3 class="headline3 -no-gap" ng-show="!errorMessage &amp;&amp; !isLoading">
+        Wählen Sie bitte Ihren Kundenstatus aus.
+       </h3>
+       <div class="inner-wrapper">
+        <hr/>
+       </div>
+       <div class="form-item">
+        <label>
+         Kundenstatus
+        </label>
+        <div class="field-item">
+         <div class="grid-form">
+          <div class="group-radiobox">
+           <div class="box-holder">
+            <label for="admin">
+             <input id="admin" name="radiobox" ng-model="contractdata.userRole" required="" type="radio" value="CustomerAccountAdmin"/>
+             <i>
+              Administrator. Sie verwalten und administrieren einen oder mehrere Verträge?
+              <br/>
+             </i>
+            </label>
+           </div>
+           <div class="box-holder">
+            <label for="user">
+             <input id="user" name="radiobox" ng-model="contractdata.userRole" required="" type="radio" value="ProductUser"/>
+             <i>
+              Sie nutzen ein Produkt von freenet, für das ein abweichender Inhaber bei freenet hinterlegt ist?
+              <br/>
+             </i>
+            </label>
+           </div>
+          </div>
+         </div>
+        </div>
+        <!--div id="admininfo" style="display: none;">
+         <div class="info tooltip" style="display: block;">
+              <div class="message">
+                Momentan liegt im Anmeldebereich eine Störung vor. Wir arbeiten mit Hochdruck an der Behebung der Störung und bitten um Geduld. Bitte probieren Sie es zu einem späteren Zeitpunkt erneut aus.
+              </div>
+         </div>
+      </div-->
+       </div>
+       <div class="inner-wrapper">
+        <hr/>
+       </div>
+      </div>
+      <!--
+  firste step for CustomerAccountAdmin:
+  phone and customerid for gettin verification options
+  jam
+  -->
+      <div ng-if="(privateUser || businessUser) &amp;&amp; (!firstResponse || errorMessage) &amp;&amp; !hasIdentificationCode &amp;&amp; customerId &amp;&amp; !requiresZipCode &amp;&amp; !requiresIban">
+       <h3 class="headline3 -no-gap" ng-show="!isLoading">
+        Geben Sie bitte Ihre Rufnummer ein.
+       </h3>
+       <div class="is-invalid" ng-show="errorMessage &amp;&amp; !isLoading">
+        <div class="error tooltip">
+         <div class="message">
+          {{errorMessage}}
+         </div>
+        </div>
+       </div>
+       <div class="inner-wrapper">
+        <hr/>
+       </div>
+       <div class="form-item">
+        <label for="invoiceMsisdn">
+         Rufnummer *
+        </label>
+        <div class="field-item">
+         <div class="grid-form">
+          <input app-focus="" app-md-validate="msisdn" id="invoiceMsisdn" name="invoiceMsisdn" ng-blur="showHint=false" ng-focus="showHint=true" ng-model="contractdata.invoiceMsisdn" placeholder="Rufnummer" required="" type="text"/>
+         </div>
+         <div class="grid-form">
+          <div class="is-successful" ng-show="showHint">
+           <div class="info tooltip">
+            <div class="message">
+             Eine Rufnummer beginnt immer mit einer "0". Der Beginn mit "49", "+49" oder "17..." ist nicht gestattet.
+            </div>
+           </div>
+          </div>
+          <div class="error tooltip">
+           <div class="message">
+            Geben Sie bitte Ihre Rufnummer ein.
+           </div>
+          </div>
+         </div>
+        </div>
+       </div>
+       <div class="inner-wrapper">
+        <hr/>
+       </div>
+      </div>
+      <div ng-if="businessUser &amp;&amp; (!firstResponse || errorMessage) &amp;&amp; !hasIdentificationCode &amp;&amp; msisdn">
+       <h3 class="headline3 -no-gap" ng-show="!isLoading">
+        Geben Sie bitte Ihre Kundennummer ein.
+       </h3>
+       <div class="is-invalid" ng-show="errorMessage &amp;&amp; !isLoading">
+        <div class="error tooltip">
+         <div class="message">
+          {{errorMessage}}
+         </div>
+        </div>
+       </div>
+       <div class="inner-wrapper">
+        <hr/>
+       </div>
+       <div class="form-item">
+        <label for="identifier">
+         Kundennummer *
+        </label>
+        <div class="field-item">
+         <div class="grid-form">
+          <input app-focus="" app-md-validate="number" id="identifier" name="identifier" ng-blur="showCustHint=false" ng-focus="showCustHint=true" ng-model="contractdata.identifier" placeholder="Kundennummer (nur Ziffern)" required="" type="text"/>
+          <ul class="linklist list">
+           <li>
+            <a app-md-fancybox="" class="fancybox" data-fancybox-type="image" href="../img/datenvervollstaendigung/Muster_Anschreiben1.jpg" rel="Kundennummer" title="Wo finde ich meine Kundennummer?">
+             Wo finde ich meine Kundennummer?
+            </a>
+            <a class="fancybox" href="../img/datenvervollstaendigung/Muster_Rechnung.jpg" rel="Kundennummer" title="Wo finde ich meine Kundennummer?">
+            </a>
+           </li>
+          </ul>
+         </div>
+         <div class="grid-form">
+          <div class="is-successful" ng-show="showCustHint">
+           <div class="info tooltip">
+            <div class="message">
+             Bitte geben Sie nur Ziffern ein. Sollte Ihre Kundennummer mit zwei Buchstaben und einem Punkt beginnen, lassen Sie diese Zeichen bitte einfach weg.
+            </div>
+           </div>
+          </div>
+          <div class="error tooltip">
+           <div class="message">
+            Bitte geben Sie Ihre Kundennummer (nur Ziffern) ein.
+           </div>
+          </div>
+         </div>
+        </div>
+       </div>
+       <div class="inner-wrapper">
+        <hr/>
+       </div>
+      </div>
+      <!-- /
+  firste step for CustomerAccountAdmin:
+  phone and customerid for gettin verification options
+  -->
+      <!--
+  migrateSignin is true:
+  switch migrate signin user or addContract new user
+  -->
+      <div class="form-item" ng-if="migrateSignin &amp;&amp; doMigrateSignin &amp;&amp; !hasIdentificationCode">
+       <p>
+        Sie haben einen alten Account mit dem Sie eine Anzahl von Verträgen verwalten? Dann gehen Sie hier weiter und melden Sie sich mit den alten Logindaten an. Im weiteren Verlauf können Sie ihren neuen Account angeben damit Sie über diesen für die Verwaltung Ihrer Verträge nutzen können.
+       </p>
+       <p>
+        <button class="btn" ng-click="existingAccountFunc()" wz-click="">
+         bestehendes Benutzerkonto
+        </button>
+       </p>
+       <div class="inner-wrapper">
+        <hr/>
+       </div>
+       <p>
+        <br/>
+        Sie haben keine alten Benutzerdaten oder möchten die auf der vorherigen Seite angegebenen Daten separat verwalten? Klicken sie bitte hier:
+       </p>
+       <p>
+        <button class="btn right" ng-click="newAccountFunc()" wz-click="">
+         neues Benutzerkonto
+        </button>
+       </p>
+      </div>
+      <!-- /
+  migrateSignin is true:
+  switch migrate signin user or addContract new user
+  -->
+      <div class="is-invalid" ng-show="errorMessage &amp;&amp; !isLoading &amp;&amp; (requiresZipCode || requiresIban)">
+       <div class="error tooltip">
+        <div class="message">
+         {{errorMessage}}
+        </div>
+       </div>
+      </div>
+      <div class="form-item" ng-if="(((!checkIban &amp;&amp; requiresZipCode &amp;&amp; migrateSignin &amp;&amp; newAccount) || (!checkIban &amp;&amp; requiresZipCode &amp;&amp; !migrateSignin) || (requiresIbanOrZipCode &amp;&amp; requiresZipCode)) &amp;&amp; !hasIdentificationCode) &amp;&amp; !smsConfirm &amp;&amp; requires">
+       <label for="zipCode">
+        PLZ *
+       </label>
+       <div class="field-item">
+        <div class="grid-form">
+         <input app-focus="" id="zipCode" name="zipCode" ng-maxlength="12" ng-minlength="2" ng-model="additionalData.zipCode" ng-pattern="/.{1,10}/" placeholder="PLZ" required="" type="text"/>
+        </div>
+        <div class="grid-form">
+         <div class="error tooltip">
+          <div class="message">
+           Bitte geben Sie Ihre Postleitzahl ein.
+          </div>
+         </div>
+        </div>
+       </div>
+      </div>
+      <div class="form-item" ng-if="(((!checkIban &amp;&amp; requiresIban &amp;&amp; migrateSignin &amp;&amp; newAccount) || (!checkIban &amp;&amp; requiresIban &amp;&amp; !migrateSignin) || (requiresIbanOrZipCode &amp;&amp; requiresIban)) &amp;&amp; !hasIdentificationCode) &amp;&amp; !smsConfirm &amp;&amp; requires">
+       <label for="iban">
+        IBAN*
+       </label>
+       <div class="field-item">
+        <div class="grid-form">
+         <input app-focus="" id="iban" name="iban" ng-maxlength="34" ng-model="additionalData.iban" ng-pattern="/^[a-zA-Z0-9]*$/" placeholder="IBAN" required="" type="text"/>
+        </div>
+        <div class="grid-form">
+         <div class="error tooltip">
+          <div class="message">
+           Bitte geben Sie die IBAN ein.
+          </div>
+         </div>
+        </div>
+       </div>
+      </div>
+      <h3 class="headline3 -no-gap" ng-if="(!errorMessage &amp;&amp; !isLoading &amp;&amp; msisdnSelect)">
+       Wählen Sie eine Mobilfunknummer
+      </h3>
+      <p ng-if="(!errorMessage &amp;&amp; !isLoading &amp;&amp; msisdnSelect)">
+       Unter Ihrem Account haben wir verschiedene Mobilfunknummern gefunden. An welche Nummer möchten Sie Ihren Aktivierungscode erhalten?
+      </p>
+      <div class="form-item" ng-if="(!errorMessage &amp;&amp; !isLoading &amp;&amp; msisdnSelect)">
+       <label for="msisdn">
+        Mobilfunknummer
+        <br/>
+        (die letzten vier Ziffern) *
+       </label>
+       <div class="field-item">
+        <div class="grid-form">
+         <select class="selectbox" id="msisdn" name="msisdn" ng-model="additionalData.msisdn" ng-options="msisdn for msisdn in contractdata.possibleMsisdns track by msisdn" required="">
+          <option value="">
+           Bitte wählen Sie eine Mobilfunknummer aus.
+          </option>
+         </select>
+         <br/>
+        </div>
+        <div class="grid-form">
+         <div class="is-successful">
+          <div class="info tooltip">
+           <div class="message">
+            Bitte stellen Sie sicher, dass Sie nun Zugang zu dieser Rufnummer haben. Der zugeleitete Aktivierungscode ist 24 Stunden gültig.
+           </div>
+          </div>
+         </div>
+        </div>
+       </div>
+      </div>
+      <div ng-cloak="" ng-if="hasIdentificationCode &amp;&amp; !sendEmail &amp;&amp; !sendLetter &amp;&amp; !requiredData">
+       <div class="is-invalid" ng-show="errorMessage &amp;&amp; !isLoading">
+        <div class="error tooltip">
+         <div class="message">
+          {{errorMessage}}
+         </div>
+        </div>
+       </div>
+       <p>
+        Dein Aktivierungscode wurde Dir bereits per {{contractdata.identificationBy | activationCodeDelivery}} zugesandt.
+       </p>
+      </div>
+      <p ng-cloak="" ng-if="hasIdentificationCode &amp;&amp; sendEmail &amp;&amp; !requiredData">
+       Es wurde bereits eine E-Mail zur Verifizierung an Sie verschickt. Klicken Sie bitte auf den darin enthaltenen Link, um zu bestätigen, dass Sie auch wirklich Sie sind. Danach können Sie  auch Ihre Daten vervollständigen.
+      </p>
+      <p ng-cloak="" ng-if="hasIdentificationCode &amp;&amp; sendLetter &amp;&amp; !requiredData">
+       Es wurde bereits ein Brief zur Verifizierung an Sie verschickt. Geben Sie bitte die darin angegebene URL in Ihren Browser ein oder klicken Sie
+       <a href="/online-service/#/aktivierung-brief">
+        hier
+       </a>
+       um Ihre Datenvervollständigung abzuschließen.
+      </p>
+      <div class="form-item" ng-cloak="" ng-if="((smsConfirm || hasIdentificationCode) &amp;&amp; !emailConfirm &amp;&amp; !sendEmail &amp;&amp; !sendLetter &amp;&amp; !requiredData)">
+       <label for="identificationCode">
+        Aktivierungscode*
+       </label>
+       <div class="field-item">
+        <div class="grid-form">
+         <input app-focus="" id="identificationCode" name="identificationCode" ng-model="additionalData.identificationCode" placeholder="Aktivierungscode" required="" type="text"/>
+        </div>
+        <div class="grid-form">
+         <div class="error tooltip">
+          <div class="message">
+           Bitte geben Sie den Aktivierungscode ein, den Sie mit der SMS erhalten haben.
+          </div>
+         </div>
+        </div>
+       </div>
+      </div>
+      <div class="form-item" ng-if="((!checkIban &amp;&amp; requiresZipCode &amp;&amp; smsConfirm) || (!checkIban &amp;&amp; requiresZipCode &amp;&amp; sendSMS &amp;&amp; hasIdentificationCode) || (checkIban &amp;&amp; requiresZipCode &amp;&amp; !sendLetter) || (!requires &amp;&amp; requiresZipCode) &amp;&amp; requires) &amp;&amp; !requiredData" required="">
+       <label for="zipCode">
+        PLZ *
+       </label>
+       <div class="field-item">
+        <div class="grid-form">
+         <input app-focus="" id="zipCode" name="zipCode" ng-maxlength="12" ng-minlength="2" ng-model="additionalData.zipCode" ng-pattern="/.{1,10}/" placeholder="PLZ" required="" type="text"/>
+        </div>
+        <div class="grid-form">
+         <div class="error tooltip">
+          <div class="message">
+           Bitte geben Sie Ihre Postleitzahl ein.
+          </div>
+         </div>
+        </div>
+       </div>
+      </div>
+      <div class="form-item" ng-if="((!checkIban &amp;&amp; requiresIban &amp;&amp; smsConfirm) || (!checkIban &amp;&amp; requiresIban &amp;&amp; sendSMS &amp;&amp; hasIdentificationCode) || (checkIban &amp;&amp; requiresIban &amp;&amp; !sendLetter) || (!requires &amp;&amp; requiresIban) &amp;&amp; requires) &amp;&amp; !requiredData" required="">
+       <label for="iban">
+        IBAN (die letzten 6 Ziffern)*
+       </label>
+       <div class="field-item">
+        <div class="grid-form">
+         <input app-focus="" id="iban" name="iban" ng-maxlength="6" ng-minlength="6" ng-model="additionalData.iban" ng-pattern="/^[0-9]*$/" placeholder="IBAN (die letzten 6 Ziffern)" required="" type="text"/>
+        </div>
+        <div class="grid-form">
+         <div class="error tooltip">
+          <div class="message">
+           Bitte geben Sie die letzten sechs Ziffern Ihrer IBAN ein.
+          </div>
+         </div>
+        </div>
+       </div>
+      </div>
+      <div class="form-item" ng-if="(smsConfirm || (sendSMS &amp;&amp; hasIdentificationCode) || !requires) &amp;&amp; requiresPerson &amp;&amp; !requiredData">
+       <p>
+        Die weiteren Angaben beziehen sich auf Sie ganz persönlich als Nutzer des Onlinekontos und nicht auf Ihrer Vertragsdaten.
+       </p>
+       <label for="salutation">
+        Anrede*
+       </label>
+       <div class="field-item">
+        <div class="grid-form">
+         <select app-focus="" class="selectbox" id="salutation" name="salutation" ng-model="additionalData.person.salutation" required="">
+          <option value="">
+           Bitte wählen Sie:
+          </option>
+          <option value="Frau">
+           Frau
+          </option>
+          <option value="Herr">
+           Herr
+          </option>
+         </select>
+        </div>
+        <div class="grid-form">
+         <div class="error tooltip">
+          <div class="message">
+           Bitte wählem Sie eine Anrede aus.
+          </div>
+         </div>
+        </div>
+       </div>
+      </div>
+      <div class="form-item" ng-if="(smsConfirm || (sendSMS &amp;&amp; hasIdentificationCode) || !requires) &amp;&amp; requiresPerson &amp;&amp; !requiredData">
+       <label for="firstName">
+        Vorname*
+       </label>
+       <div class="field-item">
+        <div class="grid-form">
+         <input app-focus="" id="firstName" name="firstName" ng-model="additionalData.person.firstName" placeholder="Vorname" required="" type="text"/>
+        </div>
+        <div class="grid-form">
+         <div class="error tooltip">
+          <div class="message">
+           Bitte geben Sie Ihren Vornamen ein.
+          </div>
+         </div>
+        </div>
+       </div>
+      </div>
+      <div class="form-item" ng-if="(smsConfirm || (sendSMS &amp;&amp; hasIdentificationCode) || !requires) &amp;&amp; requiresPerson &amp;&amp; !requiredData">
+       <label for="lastName">
+        Nachname*
+       </label>
+       <div class="field-item">
+        <div class="grid-form">
+         <input app-focus="" id="lastName" name="lastName" ng-model="additionalData.person.lastName" placeholder="Nachname" required="" type="text"/>
+        </div>
+        <div class="grid-form">
+         <div class="error tooltip">
+          <div class="message">
+           Bitte geben Sie Ihren Nachnamen ein.
+          </div>
+         </div>
+        </div>
+       </div>
+      </div>
+      <div class="form-item" ng-if="(smsConfirm || (sendSMS &amp;&amp; hasIdentificationCode) || !requires) &amp;&amp; requiresPerson &amp;&amp; !requiredData">
+       <label for="dateOfBirth">
+        Geburtsdatum*
+       </label>
+       <div class="field-item">
+        <div class="grid-form">
+         <input app-focus="" app-md-form-date-timestamp="" id="dateOfBirth" name="dateOfBirth" ng-focus="showHint=true" ng-model="additionalData.person.dateOfBirth" ng-pattern="/^(0[1-9]|[12][0-9]|3[01])\.(0[1-9]|1[012])\.(19|20)\d\d$/" placeholder="Geburtsdatum" required="" type="text"/>
+        </div>
+        <div class="grid-form">
+         <div class="is-successful" ng-show="showHint">
+          <div class="info tooltip">
+           <div class="message">
+            Geben Sie Ihr Geburtsdatum bitte wie folgt an. TT.MM.JJJJ
+           </div>
+          </div>
+         </div>
+         <div class="error tooltip">
+          <div class="message">
+           Bitte geben Sie ein gültiges Geburtsdatum ein.
+          </div>
+         </div>
+        </div>
+       </div>
+      </div>
+      <!--div class="form-item" ng-if="!doMigrateSignin && requiresMarketingPermit && (privateUser || (businessUser && !hasIdentificationCode)) && !requiredData">
+    <div class="group-checkbox">
+      <div class="box-holder">
+        <label for="hasMarketingPermit">
+          <input type="checkbox" id="hasMarketingPermit" name="hasMarketingPermit" ng-model="permitdata.hasMarketingPermit" value="VOICE">
+          Zur Vertragsverlängerung und zur Information über eigene Produkte (Telekommunikationsdienste und - produkte, Soft- und Hardware) darf mobilcom-debitel („md") mich unter Nutzung meiner Bestands - und Verkehrsdaten (Dauer, Zeitpunkt und Verbindungsart für max. 6 Monate) per Telefon, E-Mail oder SMS kontaktieren.<br>
+          md darf mich per E-Mail, SMS oder Telefon über Angebote von Partnern zu Apps, Online- und Mediendiensten, Telekommunikationsdiensten und -produkten, Software, Hardware und Zubehör, Krediten und Versicherungen informieren.<br>
+          Ich kann meine Einwilligungen jederzeit ganz oder teilweise widerrufen. Ohne meine Einwilligung bestehende Werbemöglichkeiten bleiben unberührt. Weitere Informationen finden Sie in unseren Hinweisen zum Datenschutz.
+        </label>
+      </div>
+    </div>
+  </div-->
+      <div id="tokensent" style="display: none;">
+       <div id="popup">
+        <div id="wrapper">
+         <br/>
+         <h3 class="headline3 -no-gap">
+          Sie haben Post!
+         </h3>
+         <p>
+          Wir senden Ihnen in Kürze per {{contractdata.identificationBy | activationCodeDelivery}} einen Aktivierungscode zu, mit dem Sie jetzt Ihren freenet Mein Konto Account aktivieren können.
+          <br/>
+          <span ng-if="contractdata.identificationBy === 'sms'">
+           Schauen Sie dazu bitte auf Ihr Handy mit der Mobilfunknummer *** ****{{additionalData.msisdn}}.
+          </span>
+         </p>
+        </div>
+       </div>
+      </div>
+     </div>
+    </div>
+   </fieldset>
+   <div class="grid-col grid-xl-12 grid-m-12 grid-s-8 grid-s-clear">
+    <div class="form-btn-set">
+     <a class="btn btn-second" href="/online-service/#/meine-daten" id="btnProcessBreak" ng-style="{'opacity' : !contractFlow ? 1 : 0}">
+      Abbrechen
+     </a>
+     <input class="btn right" id="btnProcessNext" ng-click="getRoleOptions()" ng-disabled="contractForm.$invalid" ng-show="(requires || privateUser || (businessUser &amp;&amp; (!migrateSignin || !doMigrateSignin))) &amp;&amp; !(hasIdentificationCode &amp;&amp; (sendEmail || sendLetter))" type="submit" value="Weiter" wz-click=""/>
+    </div>
+    <p class="obligation message">
+     Mit * gekennzeichnete Felder sind Pflichtfelder und müssen ausgefüllt werden.
+    </p>
+   </div>
+  </form>
+ </wz-step>
+ <wz-step id="processStep-step2" name="Meine Daten überprüfen" track-param="step2">
+  <form id="" name="contractFlowForm" novalidate="">
+   <fieldset class="grid-col grid-xl-12 no-padding">
+    <div class="grid-col grid-xl-4 grid-m-12 grid-s-8 grid-s-clear">
+     <div class="data-container">
+      <h3>
+       Bitte beachten Sie
+      </h3>
+      <p>
+       Nur noch einen Schritt bis zu Ihrem neuen Online Benutzerkonto.
+      </p>
+      <p>
+       Nach Abschluss der Zuordnung verwalten Sie Ihre Verträge/ Rufnummern in Ihrem neuen Benutzerkonto. Ihre bisherigen Zugänge deaktivieren wir für Sie.
+      </p>
+     </div>
+    </div>
+    <div class="grid-col grid-xl-8 grid-m-12 grid-s-8 grid-s-clear">
+     <div class="data-changed-container">
+      <h3 class="headline3 -no-gap" ng-show="!errorMessage &amp;&amp; !isLoading">
+       Überprüfen Sie bitte Ihre Daten
+      </h3>
+      <h3 class="headline3 -no-gap" ng-show="errorMessage &amp;&amp; !isLoading">
+       Es ist ein Fehler aufgetreten
+      </h3>
+      <div class="is-invalid" ng-show="errorMessage &amp;&amp; !isLoading">
+       <div class="error tooltip">
+        <div class="message">
+         {{errorMessage}}
+        </div>
+       </div>
+      </div>
+      <div>
+       <hr/>
+      </div>
+      <p>
+       Vertragsdaten
+       <div ng-show="contractNumber">
+        <label>
+         Vertragsnummer
+        </label>
+        {{contractId}}
+        <br/>
+       </div>
+       <div class="clearfix">
+       </div>
+       <div ng-show="contractdata.invoiceMsisdn || msisdn">
+        <label>
+         Rufnummer
+        </label>
+        <span ng-if="msisdn">
+         {{msisdn}}
+        </span>
+        <span ng-if="contractdata.invoiceMsisdn &amp;&amp; !msisdn">
+         {{contractdata.invoiceMsisdn}}
+        </span>
+        <br/>
+       </div>
+       <div class="clearfix">
+       </div>
+       <div ng-show="customerId || (businessUser &amp;&amp; msisdn)">
+        <label>
+         Kundennummer
+        </label>
+        <span ng-if="customerId">
+         {{customerId}}
+        </span>
+       </div>
+       <div class="clearfix">
+       </div>
+       <div ng-show="contractdata.userRole">
+        <label>
+         Kundenstatus
+        </label>
+        {{(contractdata.userRole === 'CustomerAccountAdmin') ? 'Administrator' : 'Nutzer'}}
+        <br/>
+       </div>
+       <div class="clearfix">
+       </div>
+       <div class="inner-wrapper" ng-show="additionalData.zipCode || additionalData.iban">
+        <hr/>
+       </div>
+       <p ng-show="additionalData.zipCode || additionalData.iban">
+        Daten zur Identifizierung
+       </p>
+       <div ng-show="additionalData.zipCode">
+        <label>
+         PLZ
+        </label>
+        {{additionalData.zipCode}}
+        <br/>
+       </div>
+       <div class="clearfix">
+       </div>
+       <div ng-show="additionalData.iban">
+        <label>
+         IBAN
+        </label>
+        {{additionalData.iban}}
+        <br/>
+       </div>
+       <div class="clearfix">
+       </div>
+       <div class="inner-wrapper" ng-show="additionalData.identificationCode">
+        <hr/>
+       </div>
+       <div ng-show="additionalData.identificationCode">
+        <label>
+         Aktivierungscode
+        </label>
+        {{additionalData.identificationCode}}
+        <br/>
+       </div>
+       <div class="clearfix">
+       </div>
+       <div class="inner-wrapper">
+        <hr/>
+       </div>
+       <p ng-show="additionalData.person">
+        Persönliche Daten
+       </p>
+       <div ng-show="additionalData.person">
+        <label>
+         Vorname, Nachname
+        </label>
+        {{additionalData.person.firstName}}  {{additionalData.person.lastName}}
+        <br/>
+       </div>
+       <div class="clearfix">
+       </div>
+       <div ng-show="additionalData.person.dateOfBirth">
+        <label>
+         Geburtsdatum
+        </label>
+        {{additionalData.person.dateOfBirth*1000 | date:'dd.MM.yyyy'}}
+        <br/>
+       </div>
+       <div class="clearfix">
+       </div>
+       <div class="inner-wrapper" ng-show="additionalData.person">
+        <hr/>
+       </div>
+       <!--div ng-show="requiresMarketingPermit && (privateUser || businessUser)">
+    <label>Werbeerlaubnis</label><span ng-show="!permitdata.hasMarketingPermit">nicht </span>erteilt<br>
+  </div-->
+       <div class="clearfix">
+       </div>
+       <div class="inner-wrapper" ng-show="requiresMarketingPermit &amp;&amp; (privateUser || businessUser)">
+        <hr/>
+       </div>
+      </p>
+     </div>
+    </div>
+   </fieldset>
+   <div class="grid-col grid-xl-12 grid-m-12 grid-s-8 grid-s-clear">
+    <div class="form-btn-set">
+     <input class="btn btn-second" id="btnProcessBack" type="submit" value="Zurück" wz-previous=""/>
+     <a class="btn btn-second" href="/online-service/#/meine-daten" id="btnProcessBreak" ng-style="{'opacity' : !contractFlow ? 1 : 0}">
+      Abbrechen
+     </a>
+     <input class="btn right" id="btnProcessNext" ng-click="confirm(contractdata, requires,emailConfirm, smsConfirm, sendEmail, sendSMS, sendLetter, hasIdentificationCode)" ng-disabled="$root.isAgent || contractFlowForm.$invalid" ng-value="$root.isAgent ? 'Prozess deaktiviert' : 'Absenden'" type="submit" wz-click=""/>
+    </div>
+   </div>
+   <div class="is-successful" ng-show="$root.isAgent">
+    <div class="info tooltip">
+     <div class="message">
+      {{errorCodes.isAgent}}
+     </div>
+    </div>
+   </div>
+  </form>
+ </wz-step>
+ <wz-step id="processStep-thx" name="Datenvervollständigung wurde durchgeführt" track-param="thx">
+  <div class="spinner" ng-show="(!errorMessage &amp;&amp; !emailConfirm &amp;&amp; !letterConfirm &amp;&amp; !contractsAdded &amp;&amp; !personalContact)">
+   <div class="bounce1">
+   </div>
+   <div class="bounce2">
+   </div>
+   <div class="bounce3">
+   </div>
+  </div>
+  <div class="grid-col grid-xl-9 grid-xl-pp-2 grid-xl-ap-1 grid-m-10 grid-m-pp-1 grid-m-ap-1 grid-s-8 grid-s-clear">
+   <h3 class="headline3 -no-gap" ng-show="!errorMessage &amp;&amp; !isLoading  &amp;&amp; !emailConfirm &amp;&amp; contractsAdded &amp;&amp; !personalContact">
+    Vielen Dank!
+   </h3>
+   <h3 class="headline3 -no-gap" ng-show="!errorMessage &amp;&amp; !isLoading &amp;&amp; emailConfirm &amp;&amp; !personalContact">
+    Sie haben Post!
+   </h3>
+   <h3 class="headline3 -no-gap" ng-show="errorMessage &amp;&amp; !isLoading &amp;&amp; !personalContact">
+    Es ist ein Fehler aufgetreten.
+   </h3>
+   <h3 class="headline3 -no-gap" ng-show="personalContact">
+    Persönliche Kontaktaufnahme zum Kundenservice ist erforderlich
+   </h3>
+   <h4 ng-show="!errorMessage &amp;&amp; !personalContact &amp;&amp; !isLoading &amp;&amp; emailConfirm || letterConfirm">
+    Noch ein Schritt bis zur Fertigstellung Ihres Mein Konto Benutzerkontos.
+   </h4>
+   <p ng-show="!errorMessage &amp;&amp; !personalContact &amp;&amp; !isLoading &amp;&amp; emailConfirm || letterConfirm">
+    Wir haben Ihnen gerade per
+    <span ng-if="identificationBy !== 'letter'">
+     {{identificationBy | activationCodeDelivery}} an die E-Mail-Adresse
+     <strong>
+      {{emailAddress}}
+     </strong>
+    </span>
+    <span ng-if="identificationBy === 'letter'">
+     Brief
+    </span>
+    einen Link geschickt, über  den Sie Ihren Mein Konto Account aktivieren können.
+    <br/>
+   </p>
+   <p ng-if="identificationBy === 'letter' &amp;&amp; !hasIdentificationCode">
+    Aus Datenschutzgründen erhalten Sie von uns in den nächsten Tagen per Brief an die Vertragspartneradresse Ihren Aktivierungscode, sowie den Link zur Aktivierungsseite Ihres Benutzerkontos.
+   </p>
+   <div class="hint is-active" ng-show="!errorMessage &amp;&amp; !isLoading &amp;&amp; emailConfirm &amp;&amp; !personalContact">
+    <strong>
+     Wichtig!
+    </strong>
+    <p>
+     Wenn Sie den Link in der E-Mail nicht innerhalb der nächsten 24 Stunden nutzen, wird dieser ungültig.
+    </p>
+   </div>
+   <p ng-show="!isLoading &amp;&amp; !errorMessage &amp;&amp; !emailConfirm &amp;&amp; !letterConfirm &amp;&amp; !sendLetter &amp;&amp; contractsAdded &amp;&amp; !personalContact">
+    Danke, dass Sie sich die Zeit genommen und Ihre persönlichen Daten vervollständigt haben.
+    <br/>
+    Nun können Sie vollumfänglich alle Vorteile und Services für registrierte Benutzer in Anspruch nehmen.
+   </p>
+   <p>
+    Um sicherzustellen, dass wir alle erforderlichen Daten vollständig erhalten, bitten wir Sie, sich noch einmal anzumelden.
+   </p>
+   <a class="btn" ng-click="logout('redirectLogin')" ng-show="!errorMessage &amp;&amp; !isLoading &amp;&amp; !emailConfirm &amp;&amp; !letterConfirm &amp;&amp; contractsAdded &amp;&amp; !personalContact" title="Erneut anmelden">
+    Erneut anmelden
+   </a>
+   &lt;!--ul class="linklist list"&gt;
+   <li>
+    <a href="@{link_gewinnspiel}" ng-show="!errorMessage &amp;&amp; !isLoading &amp;&amp; !emailConfirm &amp;&amp; !letterConfirm &amp;&amp; contractsAdded &amp;&amp; !personalContact" title="Zum Gewinnspiel">
+     Zum Gewinnspiel
+    </a>
+   </li>
+   <div class="is-invalid" ng-show="errorMessage &amp;&amp; !isLoading">
+    <div class="error tooltip">
+     <div class="message">
+      {{errorMessage}}
+     </div>
+    </div>
+   </div>
+   <div class="is-successful" ng-show="personalContact">
+    <div class="info tooltip">
+     <div class="message">
+      {{personalContact}}
+     </div>
+    </div>
+   </div>
+  </div>
+ </wz-step>
+</wizard>
+<script>
+ (function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9693bf0e5a18adc4',t:'MTc1NDIwMjQxNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();
+</script>
