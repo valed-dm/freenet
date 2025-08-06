@@ -116,13 +116,27 @@ class FreenetAliasAdder:
         self._write_remaining_aliases()
 
     def process_account(self, account: list):
-        """Processes a single account: logs in, checks, and adds new aliases."""
+        """
+        Processes a single account: warms up, logs in, waits, checks, and adds new aliases.
+        """
         email, password = account
-        session = Session(impersonate=random.choice(BROWSER_PROFILES), proxies=self.proxy_config)
+
+        # Initialize session for this thread
+        profile = random.choice(BROWSER_PROFILES)
+        session = Session(impersonate=profile, proxies=self.proxy_config)
+        logger.info(f"[{email}] Starting process with profile: {profile}")
+
         added_aliases = []
 
         try:
-            # 1. Login
+            # --- STEP 1: SESSION WARM-UP (The Missing Piece) ---
+            logger.info(f"[{email}] Warming up session...")
+            session.get(LOGIN_PAGE_URL, headers={"Referer": "https://www.google.com/"}, timeout=30)
+            session.get(OAUTH_HANDSHAKE_URL, headers={"Origin": "https://power.freenet.de", "Referer": LOGIN_PAGE_URL},
+                        timeout=30)
+            logger.info(f"[{email}] Session warmed up.")
+
+            # --- STEP 2: AUTHENTICATION ---
             login_payload = {"grant_type": "password", "username": email, "password": password, "world": "2",
                              "webLogin": "true"}
             resp = session.post(LOGIN_URL, data=login_payload, auth=(CLIENT_ID, CLIENT_SECRET), timeout=30)
@@ -130,35 +144,39 @@ class FreenetAliasAdder:
             access_token = resp.json()["access_token"]
             logger.success(f"[{email}] Login successful.")
 
-            delay = random.uniform(20, 60)
-            logger.info(f"[{email}] Sleeping for {delay:.2f} seconds to simulate human behavior...")
+            # --- STEP 3: THE PATIENCE COOLDOWN (The Adjustment) ---
+            # A longer, more human-like wait to defeat post-login rate limits.
+            delay = random.uniform(60, 95)
+            logger.info(f"[{email}] Waiting for {delay:.2f} seconds to simulate human behavior...")
             time.sleep(delay)
 
-            # 2. Fetch account details
+            # --- STEP 4: FETCH ACCOUNT DETAILS ---
             auth_headers = {'Authorization': f'Bearer {access_token}', 'X-Client': 'fn-cloud-web-web',
-                            'Origin': 'https://webmail.freenet.de'}
-            accounts_data = session.get(MAIL_ACCOUNTS_URL, headers=auth_headers).json()
+                            'Origin': 'https://webmail.freenet.de', 'Referer': 'https://webmail.freenet.de/'}
+            accounts_data = session.get(MAIL_ACCOUNTS_URL, headers=auth_headers, timeout=30).json()
             primary_account = accounts_data.get('data', [{}])[0]
             account_id = primary_account.get('account_id')
             existing_aliases = {alias['email'] for alias in primary_account.get('aliases', [])}
 
-            if not account_id: raise ValueError("Could not find account_id")
+            if not account_id: raise ValueError("Could not find correct account_id")
             logger.info(f"[{email}] AccountID: {account_id}. Found {len(existing_aliases)} existing aliases.")
 
-            # 3. Loop to add new aliases
+            # --- STEP 5: LOOP TO ADD NEW ALIASES ---
             aliases_to_add_count = MAX_ALIASES_PER_ACCOUNT - len(existing_aliases)
+            if aliases_to_add_count <= 0:
+                logger.info(f"[{email}] Account already has max aliases. No action needed.")
 
             for _ in range(aliases_to_add_count):
                 new_alias = None
                 try:
                     new_alias = self.available_aliases.get_nowait()
                 except queue.Empty:
-                    logger.warning(f"[{email}] Alias queue is empty.")
+                    logger.warning(f"[{email}] Alias queue is empty. Stopping alias addition for this account.")
                     break
 
                 full_email = f"{new_alias}@freenet.de"
                 if full_email in existing_aliases:
-                    logger.info(f"[{email}] Alias {full_email} already on account, skipping.")
+                    logger.info(f"[{email}] Alias {full_email} is already on the account, skipping.")
                     continue
 
                 add_payload = {"account_id": account_id, "email": full_email, "setting": "mail.accounts.internal.alias"}
@@ -166,28 +184,31 @@ class FreenetAliasAdder:
                 try:
                     response = session.post(SETTINGS_URL, headers=auth_headers, json=add_payload, timeout=45)
                     if response.status_code == 200:
-                        logger.success(f"[{email}] Added alias: {new_alias}")
+                        logger.success(f"[{email}] Successfully added alias: {new_alias}")
                         added_aliases.append(new_alias)
                         existing_aliases.add(full_email)
-                        time.sleep(random.uniform(3, 6))
+                        time.sleep(random.uniform(3, 6))  # Short delay after a success
                     else:
                         err_data = response.json()
-                        err_msg = err_data.get("message", "No message")
-                        logger.warning(f"[{email}] API error for '{new_alias}': {err_msg}")
+                        err_msg = err_data.get("message", "No error message in response")
+                        logger.warning(f"[{email}] API error adding '{new_alias}': {err_msg}")
+                        # If rate limited or account limit hit, put alias back and stop for this user.
                         if "Ratelimit" in err_msg or err_data.get("code") == 4101:
+                            logger.error(f"[{email}] Stopping alias addition due to limit. Re-queuing '{new_alias}'.")
                             self.available_aliases.put(new_alias)
-                            break
+                            break  # Stop trying for this user
                 except (errors.RequestsError, errors.RequestsError) as e:
-                    logger.error(f"[{email}] Network error adding {new_alias}: {e}. Re-queuing alias.")
+                    logger.error(
+                        f"[{email}] A network error occurred while adding '{new_alias}': {e}. Re-queuing alias.")
                     if new_alias: self.available_aliases.put(new_alias)
-                    logger.info(f"[{email}] Stopping work on this account due to network issues.")
+                    logger.info(f"[{email}] Stopping work on this account due to persistent network issues.")
                     break
 
         except Exception as e:
             error_response_text = getattr(e, 'response', {}).text if hasattr(e, 'response') else ""
-            logger.critical(f"[{email}] Critical process error: {e}")
+            logger.critical(f"[{email}] A critical error occurred in the main process: {e}")
             with self.output_lock:
-                with CRITICAL_ERRORS_FILE.open("a") as f:
+                with CRITICAL_ERRORS_FILE.open("a", encoding='utf-8') as f:
                     f.write(f"{email}:{password} | Error: {e} | Response: {error_response_text}\n")
 
         finally:
